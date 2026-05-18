@@ -1,0 +1,30 @@
+{
+  "name": "incentivos-backend",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "services/*",
+    "gateway"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:gateway": "npm run dev --workspace=@incentivos/gateway",
+    "dev:auth": "npm run dev --workspace=@incentivos/service-auth",
+    "dev:employees": "npm run dev --workspace=@incentivos/service-employees",
+    "dev:references": "npm run dev --workspace=@incentivos/service-references",
+    "dev:orders": "npm run dev --workspace=@incentivos/service-orders",
+    "dev:production": "npm run dev --workspace=@incentivos/service-production",
+    "dev:work-logs": "npm run dev --workspace=@incentivos/service-work-logs",
+    "dev:liquidation": "npm run dev --workspace=@incentivos/service-liquidation",
+    "dev:all": "concurrently -n gateway,auth,emp,ref,ord,prod,wlog,liq -c blue,green,yellow,cyan,magenta,white,red,gray \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:employees\" \"npm run dev:references\" \"npm run dev:orders\" \"npm run dev:production\" \"npm run dev:work-logs\" \"npm run dev:liquidation\"",
+    "build": "npm run build --workspaces --if-present",
+    "start": "node gateway/dist/server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^6.0.2",
+    "ts-node-dev": "^2.0.0",
+    "@types/node": "^20.19.37"
+  }
+}
