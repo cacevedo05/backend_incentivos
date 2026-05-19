@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Confirm Deploy') {
+            steps {
+                input message: '¿Desplegar las últimas imágenes?', ok: 'Sí, desplegar'
+            }
+        }
+
+        stage('Stop Containers') {
+            steps {
+                dir('C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO') {
+                    bat 'docker compose down'
+                }
+            }
+        }
+
+        stage('Pull Images') {
+            steps {
+                dir('C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO') {
+                    bat 'docker compose pull'
+                }
+            }
+        }
+
+        stage('Start Containers') {
+            steps {
+                dir('C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO') {
+                    bat 'docker compose up -d'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deploy completado exitosamente'
+        }
+        failure {
+            echo 'Deploy falló'
+        }
+    }
+}
