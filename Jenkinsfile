@@ -33,6 +33,16 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            steps {
+                dir('C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO') {
+                    bat 'docker compose down'
+                    bat 'docker compose pull'
+                    bat 'docker compose up -d'
+                }
+            }
+        }
     }
 
     post {
@@ -40,7 +50,7 @@ pipeline {
             echo "Pipeline failed for backend build ${BUILD_NUMBER}"
         }
         success {
-            echo "Backend image pushed: ${IMAGE_NAME}:${TAG}"
+            echo "Backend deployed: ${IMAGE_NAME}:${TAG}"
         }
     }
 }
