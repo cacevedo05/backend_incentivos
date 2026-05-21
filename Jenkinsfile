@@ -14,25 +14,19 @@ pipeline {
     stages {
         stage('Terraform Init') {
             steps {
-                dir('backend_incentivos/terraform') {
-                    bat 'terraform init'
-                }
+                bat 'cd terraform && terraform init'
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                dir('backend_incentivos/terraform') {
-                    bat 'terraform plan -out=tfplan'
-                }
+                bat 'cd terraform && terraform plan -out=tfplan'
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                dir('backend_incentivos/terraform') {
-                    bat 'terraform apply -auto-approve tfplan'
-                }
+                bat 'cd terraform && terraform apply -auto-approve tfplan'
             }
         }
 
