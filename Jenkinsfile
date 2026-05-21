@@ -9,6 +9,8 @@ pipeline {
         SSH_USER = 'azureuser'
         ARM_USE_CLI = 'true'
         ARM_ACCESS_KEY = credentials('ARM_ACCESS_KEY')
+        TF_VAR_db_password = credentials('TF_VAR_db_password')
+        TF_VAR_jwt_secret = credentials('TF_VAR_jwt_secret')
         PATH = "C:\\Users\\cacevedo\\AppData\\Local\\Microsoft\\WinGet\\Links;${env.PATH}"
     }
 
