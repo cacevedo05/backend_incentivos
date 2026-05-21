@@ -5,12 +5,40 @@ pipeline {
         DOCKER_HUB_USER = 'camilaacevedo'
         IMAGE_NAME = "${DOCKER_HUB_USER}/backend-incentivos"
         TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
+        AZURE_VM_IP = '20.12.74.86'
+        SSH_USER = 'azureuser'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Azure Login') {
             steps {
-                checkout scm
+                bat '''
+                    az login --use-device-code --output none
+                '''
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('backend_incentivos/terraform') {
+                    bat 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('backend_incentivos/terraform') {
+                    bat 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('backend_incentivos/terraform') {
+                    bat 'terraform apply -auto-approve tfplan'
+                }
             }
         }
 
@@ -34,13 +62,12 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Azure VM') {
             steps {
-                dir('C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO') {
-                    bat 'docker compose down'
-                    bat 'docker compose pull'
-                    bat 'docker compose up -d'
-                }
+                bat """
+                    ssh ${SSH_USER}@${AZURE_VM_IP} "sudo docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml pull"
+                    ssh ${SSH_USER}@${AZURE_VM_IP} "sudo docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml up -d"
+                """
             }
         }
     }

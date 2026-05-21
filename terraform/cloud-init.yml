@@ -1,0 +1,180 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - docker-compose-v2
+  - git
+
+write_files:
+  - path: /opt/incentivos/.env
+    permissions: "0600"
+    content: |
+      POSTGRES_PASSWORD=${db_password}
+      JWT_SECRET=${jwt_secret}
+
+  - path: /opt/incentivos/docker-compose.yml
+    permissions: "0644"
+    content: |
+      x-postgres-creds: &db
+        DB_HOST: postgres
+        DB_PORT: "5432"
+        DB_USER: postgres
+        DB_PASSWORD: $${POSTGRES_PASSWORD}
+        DB_NAME: incentivos
+
+      x-service-vars: &svc
+        <<: *db
+        JWT_SECRET: $${JWT_SECRET}
+        SERVICE_AUTH_HOST: auth
+        SERVICE_AUTH_PORT: "3001"
+        SERVICE_EMPLOYEES_HOST: employees
+        SERVICE_EMPLOYEES_PORT: "3002"
+        SERVICE_REFERENCES_HOST: references
+        SERVICE_REFERENCES_PORT: "3003"
+        SERVICE_ORDERS_HOST: orders
+        SERVICE_ORDERS_PORT: "3004"
+        SERVICE_PRODUCTION_HOST: production
+        SERVICE_PRODUCTION_PORT: "3005"
+        SERVICE_WORK_LOGS_HOST: work-logs
+        SERVICE_WORK_LOGS_PORT: "3006"
+        SERVICE_LIQUIDATION_HOST: liquidation
+        SERVICE_LIQUIDATION_PORT: "3007"
+
+      x-backend-common: &backend-common
+        image: ${backend_image}
+        depends_on:
+          postgres:
+            condition: service_healthy
+        restart: unless-stopped
+
+      services:
+        postgres:
+          image: postgres:18-alpine
+          container_name: postgres_db
+          environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: $${POSTGRES_PASSWORD}
+            POSTGRES_DB: incentivos
+          ports:
+            - "5432:5432"
+          volumes:
+            - pgdata:/var/lib/postgresql
+            - /opt/backend_incentivos/init-db:/docker-entrypoint-initdb.d
+          healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d incentivos"]
+            interval: 5s
+            retries: 10
+          restart: unless-stopped
+
+        redis:
+          image: redis:7-alpine
+          container_name: redis_cache
+          restart: unless-stopped
+
+        auth:
+          <<: *backend-common
+          container_name: auth_svc
+          environment:
+            <<: *svc
+            PORT: "3001"
+          command: ["node", "services/auth/dist/server.js"]
+
+        employees:
+          <<: *backend-common
+          container_name: employees_svc
+          environment:
+            <<: *svc
+            PORT: "3002"
+          command: ["node", "services/employees/dist/server.js"]
+
+        references:
+          <<: *backend-common
+          container_name: references_svc
+          environment:
+            <<: *svc
+            PORT: "3003"
+          command: ["node", "services/references/dist/server.js"]
+
+        orders:
+          <<: *backend-common
+          container_name: orders_svc
+          environment:
+            <<: *svc
+            PORT: "3004"
+          command: ["node", "services/orders/dist/server.js"]
+
+        production:
+          <<: *backend-common
+          container_name: production_svc
+          environment:
+            <<: *svc
+            PORT: "3005"
+          command: ["node", "services/production/dist/server.js"]
+
+        work-logs:
+          <<: *backend-common
+          container_name: worklogs_svc
+          environment:
+            <<: *svc
+            PORT: "3006"
+          command: ["node", "services/work-logs/dist/server.js"]
+
+        liquidation:
+          <<: *backend-common
+          container_name: liquidation_svc
+          environment:
+            <<: *svc
+            PORT: "3007"
+          command: ["node", "services/liquidation/dist/server.js"]
+
+        gateway:
+          <<: *backend-common
+          container_name: gateway_app
+          ports:
+            - "3000:3000"
+          environment:
+            <<: *svc
+            PORT: "3000"
+          depends_on:
+            postgres:
+              condition: service_healthy
+            auth:
+              condition: service_started
+            employees:
+              condition: service_started
+            references:
+              condition: service_started
+            orders:
+              condition: service_started
+            production:
+              condition: service_started
+            work-logs:
+              condition: service_started
+            liquidation:
+              condition: service_started
+          command: ["node", "gateway/dist/server.js"]
+
+        frontend:
+          image: ${frontend_image}
+          container_name: frontend_app
+          ports:
+            - "3001:3000"
+          depends_on:
+            - gateway
+          environment:
+            NODE_ENV: production
+          restart: unless-stopped
+
+      volumes:
+        pgdata:
+
+runcmd:
+  - systemctl start docker
+  - systemctl enable docker
+  - usermod -aG docker ${admin_username}
+  - git clone https://github.com/JJAMES2323/backend_incentivos.git /opt/backend_incentivos
+  - docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml up -d
+
+final_message: "VM lista con Docker y la aplicación desplegada"

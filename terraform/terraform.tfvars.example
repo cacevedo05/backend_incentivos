@@ -1,0 +1,12 @@
+location                  = "eastus"
+environment               = "dev"
+vm_size                   = "Standard_B2s"
+admin_username            = "azureuser"
+ssh_public_key_path       = "~/.ssh/id_rsa.pub"
+ssh_source_address_prefix = "TU_IP_PUBLICA/32"
+
+backend_image  = "camilaacevedo/backend-incentivos:latest"
+frontend_image = "camilaacevedo/front-incentivos:latest"
+
+db_password = "cambia_esta_contrasena"
+jwt_secret  = "cambia_este_secreto_largo"
