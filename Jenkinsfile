@@ -7,17 +7,10 @@ pipeline {
         TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         AZURE_VM_IP = '20.12.74.86'
         SSH_USER = 'azureuser'
+        ARM_USE_CLI = 'true'
     }
 
     stages {
-        stage('Azure Login') {
-            steps {
-                bat '''
-                    az login --use-device-code --output none
-                '''
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 dir('backend_incentivos/terraform') {
