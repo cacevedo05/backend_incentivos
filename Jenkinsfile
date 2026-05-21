@@ -8,6 +8,7 @@ pipeline {
         AZURE_VM_IP = '20.12.74.86'
         SSH_USER = 'azureuser'
         ARM_USE_CLI = 'true'
+        ARM_ACCESS_KEY = credentials('ARM_ACCESS_KEY')
         PATH = "C:\\Users\\cacevedo\\AppData\\Local\\Microsoft\\WinGet\\Links;${env.PATH}"
     }
 
