@@ -65,6 +65,7 @@ pipeline {
         stage('Deploy to Azure VM') {
             steps {
                 bat """
+                    scp C:\\Users\\cacevedo\\Desktop\\ProyectoTrabajodeGrado\\RICARDO\\docker-compose.yml ${SSH_USER}@${AZURE_VM_IP}:/opt/incentivos/docker-compose.yml
                     ssh ${SSH_USER}@${AZURE_VM_IP} "echo 'POSTGRES_PASSWORD=${DB_PASSWORD}' | sudo tee /opt/incentivos/.env"
                     ssh ${SSH_USER}@${AZURE_VM_IP} "echo 'JWT_SECRET=${JWT_SECRET}' | sudo tee -a /opt/incentivos/.env"
                     ssh ${SSH_USER}@${AZURE_VM_IP} "sudo docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml pull"
