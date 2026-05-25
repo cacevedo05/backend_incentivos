@@ -5,10 +5,10 @@ pipeline {
         DOCKER_HUB_USER = 'camilaacevedo'
         IMAGE_NAME = "${DOCKER_HUB_USER}/backend-incentivos"
         TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
-        AZURE_VM_IP = '20.12.74.86'
+        AZURE_VM_IP = '23.102.123.30'
         SSH_USER = 'azureuser'
-        ARM_USE_CLI = 'true'
         ARM_ACCESS_KEY = credentials('ARM_ACCESS_KEY')
+        ARM_USE_CLI = 'true'
         TF_VAR_db_password = credentials('TF_VAR_db_password')
         TF_VAR_jwt_secret = credentials('TF_VAR_jwt_secret')
         PATH = "C:\\Users\\cacevedo\\AppData\\Local\\Microsoft\\WinGet\\Links;${env.PATH}"
