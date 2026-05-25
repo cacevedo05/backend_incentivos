@@ -47,9 +47,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', 'docker-hub-credentials') {
-                        docker.image("${IMAGE_NAME}:${TAG}").push()
-                        docker.image("${IMAGE_NAME}:latest").push()
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        bat 'echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin'
+                        bat "docker push ${IMAGE_NAME}:${TAG}"
+                        bat "docker push ${IMAGE_NAME}:latest"
                     }
                 }
             }
