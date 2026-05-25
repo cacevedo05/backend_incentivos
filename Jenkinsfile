@@ -5,7 +5,7 @@ pipeline {
         DOCKER_HUB_USER = 'camilaacevedo'
         IMAGE_NAME = "${DOCKER_HUB_USER}/backend-incentivos"
         TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
-        AZURE_VM_IP = '23.102.123.30'
+        AZURE_VM_IP = '40.75.11.18'
         SSH_USER = 'azureuser'
         ARM_ACCESS_KEY = credentials('ARM_ACCESS_KEY')
         ARM_USE_CLI = 'true'
