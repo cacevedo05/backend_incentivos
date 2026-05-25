@@ -174,7 +174,7 @@ runcmd:
   - systemctl start docker
   - systemctl enable docker
   - usermod -aG docker ${admin_username}
-  - git clone https://github.com/JJAMES2323/backend_incentivos.git /opt/backend_incentivos
+  - git clone -b master https://github.com/cacevedo05/backend_incentivos.git /opt/backend_incentivos
   - docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml up -d
 
 final_message: "VM lista con Docker y la aplicación desplegada"
