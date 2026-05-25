@@ -13,13 +13,13 @@ variable "environment" {
 variable "location" {
   description = "Región de Azure"
   type        = string
-  default     = "eastus"
+  default     = "eastus2"
 }
 
 variable "vm_size" {
   description = "Tamaño de la VM (Standard_B1s entra en free tier)"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_D2s_v3"
 }
 
 variable "admin_username" {
@@ -37,7 +37,7 @@ variable "ssh_public_key_path" {
 variable "ssh_source_address_prefix" {
   description = "IP o CIDR autorizado para SSH. Usa tu IP pública con /32 en producción"
   type        = string
-  default     = "*"
+  default     = "181.142.26.101/32"
 }
 
 variable "backend_image" {
