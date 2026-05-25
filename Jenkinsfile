@@ -9,8 +9,8 @@ pipeline {
         SSH_USER = 'azureuser'
         ARM_ACCESS_KEY = credentials('ARM_ACCESS_KEY')
         ARM_USE_CLI = 'true'
-        TF_VAR_db_password = credentials('TF_VAR_db_password')
-        TF_VAR_jwt_secret = credentials('TF_VAR_jwt_secret')
+        DB_PASSWORD = credentials('TF_VAR_db_password')
+        JWT_SECRET = credentials('TF_VAR_jwt_secret')
         PATH = "C:\\Users\\cacevedo\\AppData\\Local\\Microsoft\\WinGet\\Links;${env.PATH}"
     }
 
@@ -56,6 +56,8 @@ pipeline {
         stage('Deploy to Azure VM') {
             steps {
                 bat """
+                    ssh ${SSH_USER}@${AZURE_VM_IP} "echo 'POSTGRES_PASSWORD=${DB_PASSWORD}' | sudo tee /opt/incentivos/.env"
+                    ssh ${SSH_USER}@${AZURE_VM_IP} "echo 'JWT_SECRET=${JWT_SECRET}' | sudo tee -a /opt/incentivos/.env"
                     ssh ${SSH_USER}@${AZURE_VM_IP} "sudo docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml pull"
                     ssh ${SSH_USER}@${AZURE_VM_IP} "sudo docker compose --env-file /opt/incentivos/.env -f /opt/incentivos/docker-compose.yml up -d"
                 """
