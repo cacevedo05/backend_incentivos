@@ -11,8 +11,8 @@ write_files:
   - path: /opt/incentivos/.env
     permissions: "0600"
     content: |
-      POSTGRES_PASSWORD=${db_password}
-      JWT_SECRET=${jwt_secret}
+      POSTGRES_PASSWORD=changeme_inject_via_jenkins
+      JWT_SECRET=changeme_inject_via_jenkins
 
   - path: /opt/incentivos/docker-compose.yml
     permissions: "0644"

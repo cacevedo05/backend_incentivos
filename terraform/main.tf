@@ -134,8 +134,6 @@ resource "azurerm_linux_virtual_machine" "main" {
     admin_username = var.admin_username
     backend_image  = var.backend_image
     frontend_image = var.frontend_image
-    db_password    = var.db_password
-    jwt_secret     = var.jwt_secret
   }))
 
   tags = local.common_tags

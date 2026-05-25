@@ -52,14 +52,5 @@ variable "frontend_image" {
   default     = "camilaacevedo/front-incentivos:latest"
 }
 
-variable "db_password" {
-  description = "Contraseña del usuario postgres"
-  type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret" {
-  description = "Secreto para firmar JWT"
-  type        = string
-  sensitive   = true
-}
+# db_password y jwt_secret se inyectan por SSH en el pipeline (Jenkinsfile)
+# ya no se pasan por Terraform para evitar recrear la VM en cada build
