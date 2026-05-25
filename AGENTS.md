@@ -6,6 +6,8 @@ Node.js + Express 5 + TypeScript 6 + PostgreSQL (pg Pool) + JWT + Zod + Swagger.
 ## Architecture
 **Microservices + API Gateway.** Each domain is an independent service under `services/`. A shared package lives in `packages/shared/`. The gateway at `gateway/` routes external requests to the correct service.
 
+Infraestructura desplegada en **Azure** mediante **Terraform**. CI/CD via **Jenkins** (corriendo local con `java -jar` como usuario, no como servicio SYSTEM).
+
 ### Service ports
 | Service | Port | Path prefix |
 |---------|------|-------------|
@@ -18,7 +20,56 @@ Node.js + Express 5 + TypeScript 6 + PostgreSQL (pg Pool) + JWT + Zod + Swagger.
 | Work-logs | 3006 | `/api/work-logs` |
 | Liquidation | 3007 | `/api/liquidation` |
 
-## Commands
+## Terraform (Azure)
+- Código en `terraform/`
+- Crea: VM, VNet, Subnet, Public IP, NSG (puertos 22/3000/3001 abiertos)
+- Backend state en Azure Storage (`tfsaincentivos`)
+- `provider.tf` tiene `prevent_deletion_if_contains_resources = false` para evitar bloqueos al recrear recursos
+- `terraform.tfvars` con variables no sensibles (location, vm_size, etc.) subido al repo
+- Variables sensibles (`db_password`, `jwt_secret`) se inyectan por SSH en el deploy, no por Terraform
+
+### Comandos Terraform
+```powershell
+cd terraform
+terraform init
+terraform plan -out=tfplan
+terraform apply -auto-approve tfplan
+terraform destroy  # solo si quieres eliminar todo
+```
+
+## Jenkins CI/CD
+**Pipeline completo** en `Jenkinsfile` (pull from GitHub):
+1. **Terraform Init** → descarga providers y state
+2. **Terraform Plan** → genera plan
+3. **Terraform Apply** → aplica cambios en Azure
+4. **Build Docker** → construye imagen con el código actual
+5. **Push Docker Hub** → sube imagen a `camilaacevedo/backend-incentivos`
+6. **Deploy** → SSH a la VM, inyecta credenciales, pull, up -d
+
+### Cómo ejecutar Jenkins
+```powershell
+$env:JENKINS_HOME="C:\ProgramData\Jenkins\.jenkins"
+java -jar "$env:USERPROFILE\jenkins.war" --httpPort=8081
+```
+Luego abrir `http://localhost:8081` y ejecutar pipeline.
+
+### Credenciales en Jenkins
+| ID | Tipo | Descripción |
+|----|------|-------------|
+| `ARM_ACCESS_KEY` | Secret text | Access key del storage account para state de Terraform |
+| `TF_VAR_db_password` | Secret text | Contraseña de PostgreSQL |
+| `TF_VAR_jwt_secret` | Secret text | Secreto para firmar JWT |
+| `docker-hub-credentials` | Username/password | Login a Docker Hub |
+
+### Estado actual de Azure
+- Resource Group: `rg-incentivos-dev`
+- VM: `vm-incentivos-dev` (Standard_D2s_v3, Ubuntu 22.04)
+- IP Pública: `20.7.65.69`
+- Frontend: `http://20.7.65.69:3001`
+- API Gateway: `http://20.7.65.69:3000`
+- SSH: `ssh azureuser@20.7.65.69`
+
+## Comandos
 | Command | Action |
 |---------|--------|
 | `npm run dev:all` | Start all services + gateway concurrently |
@@ -41,6 +92,14 @@ services/
       app.ts              — Express setup + route mounting
       modules/{domain}/   — routes, controller, service, repository, model, dto, schema
 gateway/                  — API Gateway (port 3000, proxies to services)
+terraform/                — Infraestructura Azure como código
+  main.tf                 — Recursos (VM, VNet, NSG, etc.)
+  provider.tf             — Provider AzureRM + backend state
+  variables.tf            — Variables
+  outputs.tf              — Outputs (IP, URLs)
+  cloud-init.yml          — Script de bootstrap de la VM
+  terraform.tfvars        — Valores no sensibles
+Jenkinsfile               — Pipeline CI/CD completo
 src/                      — legacy monolith (preserved for reference)
 ```
 
@@ -67,6 +126,7 @@ src/                      — legacy monolith (preserved for reference)
 - `Authorization: Bearer <token>` required
 - Token payload includes `role` field
 - Roles: `ADMIN` (full access), `PRODUCCION` (production/orders/liquidation), `RH` (employees)
+- Seed: admin@test.com / admin123
 
 ## Swagger
 - Available at `http://localhost:3000/api-docs`
@@ -78,7 +138,7 @@ src/                      — legacy monolith (preserved for reference)
 
 ## Docker
 - All services share a single Dockerfile (`Dockerfile` in workspace root) using `node:20-alpine`
-- Docker Compose lives at `C:\Users\cacevedo\Desktop\ProyectoTrabajodeGrado\RICARDO\docker-compose.yml` (11 services)
+- Docker Compose files: root `docker-compose.yml` (prod, imágenes pre-construidas) y `backend_incentivos\docker-compose.yml` (dev, build local)
 - Services use `node:20-alpine` image's default ENTRYPOINT (`docker-entrypoint.sh`) and override CMD per service in compose
 - `npm ci --ignore-scripts` for installs; bcrypt replaced with bcryptjs (pure JS) to avoid native compilation
 - The build step runs `npm run build` for all workspaces (including `packages/shared` which has `build: tsc` now)
@@ -95,3 +155,5 @@ src/                      — legacy monolith (preserved for reference)
 - Gateway body forwarding: `express.json()` consumes the body stream, so `proxyReq` handler re-stringifies and writes it
 - Service registry (`gateway/src/services/registry.ts`) reads `SERVICE_{NAME}_HOST`/`_PORT` env vars for Docker hostnames
 - `packages/shared` uses `main: dist/index.js` (runtime) and `types: src/index.ts` (build-time type checking)
+- Terraform state lock: no ejecutar `terraform apply` local mientras el pipeline de Jenkins corre
+- Si Jenkins falla con "deleting Resource Group": el state está inconsistente, ejecutar `terraform apply` local primero
