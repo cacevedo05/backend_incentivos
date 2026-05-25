@@ -52,8 +52,6 @@ pipeline {
                             $dockerUsername = $env:DOCKER_USERNAME.Trim()
                             $dockerPassword = $env:DOCKER_PASSWORD.Trim()
                             Write-Host "Docker Hub user: $dockerUsername"
-                            Write-Host "Docker Hub token length: $($dockerPassword.Length)"
-                            docker logout
                             $dockerPassword | docker login -u $dockerUsername --password-stdin
                         '''
                         bat "docker push ${IMAGE_NAME}:${TAG}"
