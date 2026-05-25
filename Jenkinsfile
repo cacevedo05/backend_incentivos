@@ -52,7 +52,11 @@ pipeline {
                             $dockerUsername = $env:DOCKER_USERNAME.Trim()
                             $dockerPassword = $env:DOCKER_PASSWORD.Trim()
                             Write-Host "Docker Hub user: $dockerUsername"
+                            Write-Host "Token length: $($dockerPassword.Length)"
+                            $bytes = [System.Text.Encoding]::UTF8.GetBytes($dockerPassword.Substring(0, [Math]::Min(4, $dockerPassword.Length)))
+                            Write-Host "First 4 chars hex: $($bytes | ForEach-Object { '0x{0:X2}' -f $_ })"
                             $dockerPassword | docker login -u $dockerUsername --password-stdin
+                            if (-not $?) { throw "docker login failed" }
                         '''
                         bat "docker push ${IMAGE_NAME}:${TAG}"
                         bat "docker push ${IMAGE_NAME}:latest"
