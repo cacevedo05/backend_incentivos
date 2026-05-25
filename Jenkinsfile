@@ -24,6 +24,8 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 bat 'cd terraform && terraform plan -out=tfplan'
+                bat 'cd terraform && terraform show -no-color tfplan > tfplan.txt'
+                bat 'cd terraform && findstr /C:"will be destroyed" /C:"must be replaced" tfplan.txt && (echo Terraform plan destructivo detectado. Revisar tfplan.txt antes de aplicar. && exit /b 1) || exit /b 0'
             }
         }
 

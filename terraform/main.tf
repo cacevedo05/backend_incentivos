@@ -3,6 +3,10 @@ resource "azurerm_resource_group" "main" {
   location = var.location
 
   tags = local.common_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 locals {
@@ -137,4 +141,9 @@ resource "azurerm_linux_virtual_machine" "main" {
   }))
 
   tags = local.common_tags
+
+  lifecycle {
+    ignore_changes  = [custom_data]
+    prevent_destroy = true
+  }
 }
