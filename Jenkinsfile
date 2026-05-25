@@ -48,7 +48,14 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        powershell '$env:DOCKER_PASSWORD | docker login -u $env:DOCKER_USERNAME --password-stdin'
+                        powershell '''
+                            $dockerUsername = $env:DOCKER_USERNAME.Trim()
+                            $dockerPassword = $env:DOCKER_PASSWORD.Trim()
+                            Write-Host "Docker Hub user: $dockerUsername"
+                            Write-Host "Docker Hub token length: $($dockerPassword.Length)"
+                            docker logout
+                            $dockerPassword | docker login -u $dockerUsername --password-stdin
+                        '''
                         bat "docker push ${IMAGE_NAME}:${TAG}"
                         bat "docker push ${IMAGE_NAME}:latest"
                     }
