@@ -47,7 +47,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         powershell '$env:DOCKER_PASSWORD | docker login -u $env:DOCKER_USERNAME --password-stdin'
                         bat "docker push ${IMAGE_NAME}:${TAG}"
                         bat "docker push ${IMAGE_NAME}:latest"
