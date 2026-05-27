@@ -16,7 +16,7 @@ export class AuthService {
         const isPasswordValid = await bycript.compare(data.password, user.password);
 
         if (!isPasswordValid){
-            throw new Error('Credenciales inválidas');
+            throw new Error('Tus credenciales inválidas');
         }
 
         const token = generateToken ({
