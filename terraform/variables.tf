@@ -37,7 +37,7 @@ variable "ssh_public_key_path" {
 variable "ssh_source_address_prefix" {
   description = "IP o CIDR autorizado para SSH. Usa tu IP pública con /32 en producción"
   type        = string
-  default     = "181.142.26.101/32"
+  default     = "191.95.34.65/32"
 }
 
 variable "backend_image" {
